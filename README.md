@@ -245,10 +245,48 @@ ffmpeg -f alsa -i hw:0 -t 10 test.mp3
 
 ## Requirements
 
-- **ffmpeg** — Audio recording
-- **Whisper** — Local transcription (OpenAI)
-- **bash** — Shell scripting
-- **Hermes** (optional) — Integration with your workflow
+### System Dependencies
+
+- **bash** (≥ 4.0) — Shell scripting
+- **ffmpeg** (≥ 4.0) — Audio recording and encoding
+- **Python 3** (≥ 3.8) — Required for Whisper
+
+### Python Packages
+
+- **openai-whisper** (≥ 20230314) — Local speech-to-text transcription
+- **pydub** (≥ 0.25.1) — Optional, for advanced audio processing
+
+### Optional
+
+- **sox** — Advanced audio manipulation (alternative to ffmpeg for some operations)
+- **Hermes Agent** — For workflow integration and advanced automation
+- **libreoffice** — For converting Markdown minutes to PDF
+- **GPU support** (NVIDIA CUDA) — For faster transcription (5-10x speedup)
+
+### Operating System Support
+
+- ✅ **Linux** — Primary platform (Debian, Ubuntu, Fedora, Arch, etc.)
+- ✅ **macOS** — Fully supported (Intel & Apple Silicon)
+- ✅ **Windows** — Supported via WSL2 (Windows Subsystem for Linux)
+
+### Hardware Requirements
+
+**Minimum (Works, but slow):**
+- CPU: 2-core processor
+- RAM: 4 GB
+- Storage: 500 MB for Whisper base model
+
+**Recommended (Smooth experience):**
+- CPU: 4-core processor (or higher)
+- RAM: 8 GB or more
+- Storage: 1 GB available for Whisper model + meeting files
+- GPU: Optional but recommended (NVIDIA RTX or similar for 5-10x speedup)
+
+### Audio Hardware
+
+- **Microphone** — Any USB or built-in microphone
+- **PulseAudio or ALSA** — Linux audio system (usually pre-installed)
+- **Speakers** — For monitoring during recording (optional)
 
 ## License
 
