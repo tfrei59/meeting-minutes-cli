@@ -1,0 +1,182 @@
+#!/bin/bash
+# meeting-minutes: Record, transcribe, and generate meeting minutes
+# Usage: meeting-minutes <meeting-name> [optional-agenda-file]
+# Example: meeting-minutes "team-standup" agenda.txt
+# Dependencies: ffmpeg, whisper, Hermes
+
+set -e
+
+# Colors for output
+GREEN='\033[0;32m'
+BLUE='\033[0;34m'
+YELLOW='\033[1;33m'
+NC='\033[0m' # No Color
+
+# Configuration
+MEETINGS_DIR="$HOME/meetings"
+WHISPER_VENV="$HOME/.hermes-whisper/bin/activate"
+WHISPER_MODEL="${WHISPER_MODEL:-base}"
+OUTPUT_FORMAT="all"  # txt, vtt, srt, json, all
+
+# Check if meeting name provided
+if [ -z "$1" ]; then
+  echo "Usage: meeting-minutes <meeting-name> [agenda-file]"
+  echo "Example: meeting-minutes 'team-standup' agenda.txt"
+  exit 1
+fi
+
+MEETING_NAME="$1"
+AGENDA_FILE="${2:-}"
+MEETING_DIR="$MEETINGS_DIR/$(date +%Y%m%d-%H%M%S)-$MEETING_NAME"
+
+# Create meeting directory
+mkdir -p "$MEETING_DIR"
+
+echo -e "${BLUE}═══════════════════════════════════════${NC}"
+echo -e "${BLUE}   MEETING RECORDER & TRANSCRIBER${NC}"
+echo -e "${BLUE}═══════════════════════════════════════${NC}"
+echo ""
+echo -e "Meeting: ${GREEN}$MEETING_NAME${NC}"
+echo -e "Date: ${GREEN}$(date '+%B %d, %Y')${NC}"
+echo -e "Directory: ${GREEN}$MEETING_DIR${NC}"
+echo ""
+
+# Step 1: Get agenda if not provided
+if [ -z "$AGENDA_FILE" ]; then
+  echo -e "${YELLOW}Step 1: Enter Meeting Agenda${NC}"
+  echo "Paste your meeting agenda (Ctrl+D when done):"
+  echo ""
+  cat > "$MEETING_DIR/agenda.txt"
+  echo ""
+else
+  echo -e "${YELLOW}Step 1: Using provided agenda${NC}"
+  cp "$AGENDA_FILE" "$MEETING_DIR/agenda.txt"
+  echo "Agenda: $AGENDA_FILE"
+  echo ""
+fi
+
+# Step 2: Record meeting
+echo -e "${YELLOW}Step 2: Recording Audio${NC}"
+echo "Recording to: $MEETING_DIR/audio.mp3"
+echo "Press Ctrl+C to stop recording"
+echo ""
+
+ffmpeg -f pulse -i default -acodec libmp3lame -q:a 4 "$MEETING_DIR/audio.mp3" 2>&1 | grep -E "(frame=|time=|bitrate=)" || true
+
+echo ""
+echo -e "${GREEN}✓ Recording complete${NC}"
+AUDIO_SIZE=$(du -h "$MEETING_DIR/audio.mp3" | cut -f1)
+echo "File size: $AUDIO_SIZE"
+echo ""
+
+# Step 3: Transcribe with Whisper
+echo -e "${YELLOW}Step 3: Transcribing with Whisper${NC}"
+echo "Model: $WHISPER_MODEL"
+echo "This may take a few minutes..."
+echo ""
+
+source "$WHISPER_VENV"
+whisper "$MEETING_DIR/audio.mp3" \
+  --model "$WHISPER_MODEL" \
+  --language en \
+  --output_format "$OUTPUT_FORMAT" \
+  --output_dir "$MEETING_DIR" \
+  --verbose False 2>&1 | tail -5
+
+echo ""
+echo -e "${GREEN}✓ Transcription complete${NC}"
+echo ""
+
+# Step 4: Create markdown minutes template
+echo -e "${YELLOW}Step 4: Creating Minutes Template${NC}"
+
+cat > "$MEETING_DIR/minutes.md" << 'MINUTES_TEMPLATE'
+# MEETING MINUTES
+
+**Date:** $(date '+%B %d, %Y')  
+**Time:** [Time]  
+**Location:** [Location]  
+**Duration:** [Duration]
+
+---
+
+## ATTENDEES
+
+### Present
+- [Name]
+- [Name]
+
+---
+
+## AGENDA ITEMS & DECISIONS
+
+### 1. [First Agenda Item]
+
+**Discussion:**
+- [Key point]
+- [Key point]
+
+**Decision:** [Decision made]
+
+**Action Items:**
+- [ ] [Action] - Owner: [Name], Due: [Date]
+
+---
+
+## KEY DECISIONS MADE
+
+- ✅ [Decision 1]
+- ✅ [Decision 2]
+
+---
+
+## ACTION ITEMS SUMMARY
+
+| Task | Owner | Due Date | Status | Priority |
+|------|-------|----------|--------|----------|
+| [Task] | [Owner] | [Date] | Pending | [High/Medium/Low] |
+
+---
+
+## NOTES FOR FOLLOW-UP
+
+1. [Item]
+2. [Item]
+
+---
+
+**Prepared by:** [Name]  
+**Next Meeting:** [Date/Time]
+MINUTES_TEMPLATE
+
+# Replace template placeholders with actual data from agenda
+if [ -f "$MEETING_DIR/agenda.txt" ]; then
+  AGENDA_CONTENT=$(cat "$MEETING_DIR/agenda.txt")
+  sed -i "s/\[First Agenda Item\]/$AGENDA_CONTENT/" "$MEETING_DIR/minutes.md"
+fi
+
+echo -e "${GREEN}✓ Minutes template created${NC}"
+echo ""
+
+# Step 5: Summary
+echo -e "${BLUE}═══════════════════════════════════════${NC}"
+echo -e "${GREEN}✓ MEETING RECORDING COMPLETE${NC}"
+echo -e "${BLUE}═══════════════════════════════════════${NC}"
+echo ""
+echo "Files created:"
+echo "  Audio: $MEETING_DIR/audio.mp3"
+echo "  Transcript (Text): $MEETING_DIR/audio.txt"
+echo "  Transcript (Timestamped): $MEETING_DIR/audio.vtt"
+echo "  Transcript (JSON): $MEETING_DIR/audio.json"
+echo "  Agenda: $MEETING_DIR/agenda.txt"
+echo "  Minutes Template: $MEETING_DIR/minutes.md"
+echo ""
+echo "Next steps:"
+echo "  1. Review transcript: cat $MEETING_DIR/audio.txt"
+echo "  2. Edit minutes: nano $MEETING_DIR/minutes.md"
+echo "  3. Convert to PDF: libreoffice --headless --convert-to pdf $MEETING_DIR/minutes.md"
+echo "  4. Share: cat $MEETING_DIR/minutes.md"
+echo ""
+echo "Transcript location:"
+echo "  $MEETING_DIR/"
+echo ""

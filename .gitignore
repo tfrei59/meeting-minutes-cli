@@ -1,0 +1,36 @@
+# Meeting recordings and transcripts (keep local)
+meetings/
+*.mp3
+*.wav
+*.m4a
+
+# Transcripts
+*.txt
+*.vtt
+*.srt
+*.json
+
+# OS
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE
+.vscode/
+.idea/
+*.code-workspace
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.egg-info/
+.venv/
+venv/
+
+# Environment
+.env
+.env.local
+*.log
