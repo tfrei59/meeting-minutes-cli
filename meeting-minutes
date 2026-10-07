@@ -44,9 +44,22 @@ echo ""
 # Step 1: Get agenda if not provided
 if [ -z "$AGENDA_FILE" ]; then
   echo -e "${YELLOW}Step 1: Enter Meeting Agenda${NC}"
-  echo "Paste your meeting agenda (Ctrl+D when done):"
+  echo "Paste your meeting agenda (Ctrl+D when done, or just Ctrl+D for no agenda):"
   echo ""
-  cat > "$MEETING_DIR/agenda.txt"
+  AGENDA_TEMP=$(mktemp)
+  cat > "$AGENDA_TEMP"
+  
+  # Check if agenda is empty
+  if [ -s "$AGENDA_TEMP" ]; then
+    # Agenda provided
+    cp "$AGENDA_TEMP" "$MEETING_DIR/agenda.txt"
+    echo -e "${GREEN}✓ Agenda saved${NC}"
+  else
+    # No agenda provided
+    echo -e "${YELLOW}No agenda provided - proceeding with general meeting recording${NC}"
+    echo "" > "$MEETING_DIR/agenda.txt"
+  fi
+  rm "$AGENDA_TEMP"
   echo ""
 else
   echo -e "${YELLOW}Step 1: Using provided agenda${NC}"

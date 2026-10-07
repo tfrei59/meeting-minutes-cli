@@ -57,10 +57,13 @@ source ~/.bashrc
 ### Basic Usage
 
 ```bash
-# Record a meeting (prompts for agenda)
+# Record a meeting with agenda (prompts for it)
 meeting-minutes "team-standup"
 
-# With an agenda file
+# Record a general meeting summary (no agenda - just press Ctrl+D)
+meeting-minutes "impromptu-discussion"
+
+# With a pre-written agenda file
 meeting-minutes "quarterly-planning" ~/Documents/agenda.txt
 
 # Examples
@@ -70,11 +73,19 @@ meeting-minutes "board-meeting" agenda.md
 
 ### Workflow
 
-1. **Run the script** → provides meeting name
+**With Agenda:**
+1. **Run the script** with meeting name
 2. **Enter agenda** (Ctrl+D when done)
 3. **Script records** your meeting (Ctrl+C to stop)
 4. **Whisper transcribes** the audio
-5. **Minutes template generated** ready for editing
+5. **Minutes template generated** using your agenda
+
+**Without Agenda (General Summary):**
+1. **Run the script** with meeting name
+2. **Press Ctrl+D immediately** (skip agenda step)
+3. **Script records** your meeting (Ctrl+C to stop)
+4. **Whisper transcribes** the audio
+5. **Minutes template generated** ready to fill in
 
 ### Output
 
